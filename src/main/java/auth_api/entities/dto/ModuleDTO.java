@@ -1,9 +1,11 @@
 package auth_api.entities.dto;
 
 import auth_api.entities.Module;
+import lombok.Getter;
 
+@Getter
 public class ModuleDTO {
-    private Long id;
+    private final Long id;
     private final String name;
     private final String description;
 
