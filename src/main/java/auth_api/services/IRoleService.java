@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface IRoleService {
     List<RoleDTO> findAll();
 
-    Optional<RoleDTO> findById(Long id);
+    RoleDTO findById(Long id);
 
     RoleDTO save(RoleRequestDTO roleRequestDTO);
 

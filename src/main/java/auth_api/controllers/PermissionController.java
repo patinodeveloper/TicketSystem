@@ -28,9 +28,8 @@ public class PermissionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PermissionDTO>> findById(@PathVariable Long id) {
-        return permissionService.findById(id)
-                .map(permission -> ResponseEntity.ok(ApiResponse.success(permission)))
-                .orElse(ResponseEntity.notFound().build());
+        PermissionDTO permissionDTO = permissionService.findById(id);
+        return ResponseEntity.ok(ApiResponse.success(permissionDTO));
     }
 
     @PostMapping
@@ -44,8 +43,8 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<String>> delete(@PathVariable Long id) {
         permissionService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.success("Permiso eliminado exitosamente", null));
     }
 }

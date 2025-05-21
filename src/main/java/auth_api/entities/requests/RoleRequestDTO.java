@@ -20,6 +20,7 @@ public class RoleRequestDTO {
     @Size(min = 3, max = 50, message = "El nombre del rol debe tener entre 3 y 50 caracteres")
     private String name;
 
+    @NotBlank(message = "El slug del rol es obligatorio")
     @Size(min = 3, max = 50, message = "El slug del rol debe tener entre 3 y 50 caracteres")
     private String slug;
 

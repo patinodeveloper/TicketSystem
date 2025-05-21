@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface IUserService {
     List<UserDTO> findAll();
 
-    Optional<UserDTO> findById(Long id);
+    UserDTO findById(Long id);
 
     UserDTO save(UserRequestDTO userRequestDTO);
 

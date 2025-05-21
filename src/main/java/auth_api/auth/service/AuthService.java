@@ -33,7 +33,6 @@ public class AuthService {
         String token = jwtService.getToken(user);
 
         return new AuthResponse(token);
-
     }
 
     public AuthResponse register(RegisterRequest registerRequest) {

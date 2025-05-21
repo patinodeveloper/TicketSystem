@@ -28,4 +28,8 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> error(String message) {
         return new ApiResponse<>(ApiStatus.ERROR, message, null);
     }
+
+    public static <T> ApiResponse<T> error(String message, T data) {
+        return new ApiResponse<>(ApiStatus.ERROR, message, data);
+    }
 }

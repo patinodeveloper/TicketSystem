@@ -32,9 +32,8 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserDTO>> findById(@PathVariable Long id) {
-        return userService.findById(id)
-                .map(user -> ResponseEntity.ok(ApiResponse.success(user)))
-                .orElse(ResponseEntity.notFound().build());
+        UserDTO userDTO = userService.findById(id);
+        return ResponseEntity.ok(ApiResponse.success(userDTO));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -53,6 +52,6 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         userService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.success("Usuario eliminado exitosamente", null));
     }
 }

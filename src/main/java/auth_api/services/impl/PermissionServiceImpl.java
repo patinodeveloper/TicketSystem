@@ -1,10 +1,9 @@
 package auth_api.services.impl;
 
+import auth_api.config.exceptions.NotFoundException;
 import auth_api.entities.Module;
 import auth_api.entities.Permission;
-import auth_api.entities.User;
 import auth_api.entities.dto.PermissionDTO;
-import auth_api.entities.dto.UserDTO;
 import auth_api.entities.requests.PermissionRequestDTO;
 import auth_api.mappers.PermissionMapper;
 import auth_api.repositories.ModuleRepository;
@@ -13,14 +12,13 @@ import auth_api.services.IPermissionService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PermissionServiceImpl implements IPermissionService {
 
     private final PermissionRepository permissionRepository;
     private final PermissionMapper permissionMapper;
-    private final ModuleRepository moduleRepository; // Repositorio de Módulos para obtener el módulo por ID
+    private final ModuleRepository moduleRepository;
 
     public PermissionServiceImpl(PermissionRepository permissionRepository, PermissionMapper permissionMapper,
                                  ModuleRepository moduleRepository) {
@@ -36,24 +34,17 @@ public class PermissionServiceImpl implements IPermissionService {
     }
 
     @Override
-    public Optional<PermissionDTO> findById(Long id) {
-        Optional<Permission> optionalPermission = permissionRepository.findById(id);
+    public PermissionDTO findById(Long id) {
+        Permission permission = permissionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Permiso no encontrado con el ID: " + id));
 
-        if (optionalPermission.isPresent()) {
-            Permission permission = optionalPermission.get();
-
-            PermissionDTO permissionDTO = permissionMapper.toDTO(permission);
-
-            return Optional.of(permissionDTO);
-        } else {
-            return Optional.empty();
-        }
+        return permissionMapper.toDTO(permission);
     }
 
     @Override
     public PermissionDTO save(PermissionRequestDTO requestDTO) {
         Module module = moduleRepository.findById(requestDTO.getModuleId())
-                .orElseThrow(() -> new RuntimeException("Módulo no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Permiso no encontrado con el ID: " + requestDTO.getModuleId()));
 
         Permission permission = permissionMapper.toEntity(requestDTO, module);
         Permission savedPermission = permissionRepository.save(permission);
@@ -62,11 +53,11 @@ public class PermissionServiceImpl implements IPermissionService {
 
     @Override
     public PermissionDTO update(Long id, PermissionRequestDTO requestDTO) {
-        Permission permission = permissionRepository.findById(id).orElseThrow(()
-                -> new RuntimeException("Permiso no encontrado"));
+        Permission permission = permissionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Permiso no encontrado con el ID: " + id));
 
         Module module = moduleRepository.findById(requestDTO.getModuleId())
-                .orElseThrow(() -> new RuntimeException("Módulo no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Permiso no encontrado con el ID: " + id));
 
         permission.setName(requestDTO.getName());
         permission.setSlug(requestDTO.getSlug());
@@ -80,7 +71,7 @@ public class PermissionServiceImpl implements IPermissionService {
     @Override
     public void delete(Long id) {
         if (!permissionRepository.existsById(id)) {
-            throw new RuntimeException("Permiso no encontrado con el ID: " + id);
+            throw new NotFoundException("Permiso no encontrado con el ID: " + id);
         }
         permissionRepository.deleteById(id);
     }

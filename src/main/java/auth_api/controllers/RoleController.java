@@ -28,9 +28,8 @@ public class RoleController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<RoleDTO>> findById(@PathVariable Long id) {
-        return roleService.findById(id)
-                .map(role -> ResponseEntity.ok(ApiResponse.success(role)))
-                .orElse(ResponseEntity.notFound().build());
+        RoleDTO roleDTO = roleService.findById(id);
+        return ResponseEntity.ok(ApiResponse.success(roleDTO));
     }
 
     @PostMapping
@@ -44,8 +43,8 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<String>> delete(@PathVariable Long id) {
         roleService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.success("Rol eliminado exitosamente", null));
     }
 }

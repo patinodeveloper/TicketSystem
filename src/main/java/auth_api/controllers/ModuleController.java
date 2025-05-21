@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/modules")
@@ -33,10 +32,8 @@ public class ModuleController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ModuleDTO>> getModuleById(@PathVariable Long id) {
-        Optional<ModuleDTO> moduleDTO = moduleService.findById(id);
-        return moduleDTO
-                .map(dto -> ResponseEntity.ok(ApiResponse.success(dto)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        ModuleDTO moduleDTO = moduleService.findById(id);
+        return ResponseEntity.ok(ApiResponse.success(moduleDTO));
     }
 
     @PostMapping
@@ -56,6 +53,6 @@ public class ModuleController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteModule(@PathVariable Long id) {
         moduleService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success("Module deleted successfully"));
+        return ResponseEntity.ok(ApiResponse.success("Módulo eliminado exitosamente", null));
     }
 }

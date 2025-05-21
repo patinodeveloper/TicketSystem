@@ -1,5 +1,6 @@
 package auth_api.services.impl;
 
+import auth_api.config.exceptions.NotFoundException;
 import auth_api.entities.Permission;
 import auth_api.entities.Role;
 import auth_api.entities.User;
@@ -38,18 +39,11 @@ public class RoleServiceImpl implements IRoleService {
     }
 
     @Override
-    public Optional<RoleDTO> findById(Long id) {
-        Optional<Role> optionalRole = roleRepository.findById(id);
+    public RoleDTO findById(Long id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Rol no encontrado con el id: " + id));
 
-        if (optionalRole.isPresent()) {
-            Role role = optionalRole.get();
-
-            RoleDTO roleDTO = roleMapper.toDTO(role);
-
-            return Optional.of(roleDTO);
-        } else {
-            return Optional.empty();
-        }
+        return roleMapper.toDTO(role);
     }
 
     @Override
@@ -57,10 +51,13 @@ public class RoleServiceImpl implements IRoleService {
         Role role = roleMapper.toEntity(roleRequestDTO);
 
         if (roleRequestDTO.getPermissionIds() != null && !roleRequestDTO.getPermissionIds().isEmpty()) {
-            Set<Permission> permissions = new HashSet<>(permissionRepository.findAllById(roleRequestDTO.getPermissionIds()));
+            Set<Permission> permissions = new HashSet<>(permissionRepository
+                    .findAllById(roleRequestDTO.getPermissionIds()));
+
             if (permissions.size() != roleRequestDTO.getPermissionIds().size()) {
-                throw new RuntimeException("Algunos permisos no existen");
+                throw new NotFoundException("Algunos permisos no existen");
             }
+
             role.setPermissions(permissions);
         }
         Role updatedRole = roleRepository.save(role);
@@ -69,7 +66,8 @@ public class RoleServiceImpl implements IRoleService {
 
     @Override
     public RoleDTO update(Long id, RoleRequestDTO roleRequestDTO) {
-        Role role = roleRepository.findById(id).orElseThrow(() -> new RuntimeException("Role not found"));
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Rol no encontrado con el id: " + id));
         role.setName(roleRequestDTO.getName());
         role.setSlug(roleRequestDTO.getSlug());
         role.setDescription(roleRequestDTO.getDescription());
@@ -77,7 +75,7 @@ public class RoleServiceImpl implements IRoleService {
         if (roleRequestDTO.getPermissionIds() != null && !roleRequestDTO.getPermissionIds().isEmpty()) {
             Set<Permission> permissions = new HashSet<>(permissionRepository.findAllById(roleRequestDTO.getPermissionIds()));
             if (permissions.size() != roleRequestDTO.getPermissionIds().size()) {
-                throw new RuntimeException("Algunos permisos no existen");
+                throw new NotFoundException("Algunos permisos no existen");
             }
             role.setPermissions(permissions);
         }
@@ -88,7 +86,7 @@ public class RoleServiceImpl implements IRoleService {
     @Override
     public void delete(Long id) {
         if (!roleRepository.existsById(id)) {
-            throw new RuntimeException("Role no encontrado con el ID: " + id);
+            throw new NotFoundException("Rol no encontrado con el id: " + id);
         }
         roleRepository.deleteById(id);
     }

@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface IPermissionService {
     List<PermissionDTO> findAll();
 
-    Optional<PermissionDTO> findById(Long id);
+    PermissionDTO findById(Long id);
 
     PermissionDTO save(PermissionRequestDTO permissionRequestDTO);
 

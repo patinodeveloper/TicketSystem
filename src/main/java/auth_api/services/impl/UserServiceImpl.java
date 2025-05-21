@@ -1,5 +1,6 @@
 package auth_api.services.impl;
 
+import auth_api.config.exceptions.NotFoundException;
 import auth_api.entities.Role;
 import auth_api.entities.User;
 import auth_api.entities.dto.UserDTO;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -36,18 +36,11 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public Optional<UserDTO> findById(Long id) {
-        Optional<User> optionalUser = userRepository.findById(id);
+    public UserDTO findById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado con el id: " + id));
 
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-
-            UserDTO userDTO = userMapper.toDTO(user);
-
-            return Optional.of(userDTO);
-        } else {
-            return Optional.empty();
-        }
+        return userMapper.toDTO(user);
     }
 
     @Override
@@ -55,10 +48,13 @@ public class UserServiceImpl implements IUserService {
         User user = userMapper.toEntity(userRequestDTO);
 
         if (userRequestDTO.getRoleIds() != null && !userRequestDTO.getRoleIds().isEmpty()) {
+
             Set<Role> roles = new HashSet<>(roleRepository.findAllById(userRequestDTO.getRoleIds()));
+
             if (roles.size() != userRequestDTO.getRoleIds().size()) {
-                throw new RuntimeException("Algunos roles no existen");
+                throw new NotFoundException("Algunos roles no existen");
             }
+
             user.setRoles(roles);
         }
         User updatedUser = userRepository.save(user);
@@ -67,7 +63,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserDTO update(Long id, UserRequestDTO userRequestDTO) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());
         user.setUsername(userRequestDTO.getUsername());
@@ -76,9 +72,11 @@ public class UserServiceImpl implements IUserService {
 
         if (userRequestDTO.getRoleIds() != null && !userRequestDTO.getRoleIds().isEmpty()) {
             Set<Role> roles = new HashSet<>(roleRepository.findAllById(userRequestDTO.getRoleIds()));
+
             if (roles.size() != userRequestDTO.getRoleIds().size()) {
-                throw new RuntimeException("Algunos roles no existen");
+                throw new NotFoundException("Algunos roles no existen");
             }
+
             user.setRoles(roles);
         }
         User updatedUser = userRepository.save(user);
@@ -88,7 +86,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public void delete(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("Usuario no encontrado con el ID: " + id);
+            throw new NotFoundException("Usuario no encontrado con el ID: " + id);
         }
         userRepository.deleteById(id);
     }

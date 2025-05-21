@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface IModuleService {
     List<ModuleDTO> findAll();
 
-    Optional<ModuleDTO> findById(Long id);
+    ModuleDTO findById(Long id);
 
     ModuleDTO save(ModuleRequestDTO moduleRequestDTO);
 
