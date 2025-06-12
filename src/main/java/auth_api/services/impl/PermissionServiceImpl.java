@@ -4,10 +4,12 @@ import auth_api.config.exceptions.NotFoundException;
 import auth_api.entities.Module;
 import auth_api.entities.Permission;
 import auth_api.entities.dto.PermissionDTO;
+import auth_api.entities.dto.permissions.SlugPermissionDTO;
 import auth_api.entities.requests.PermissionRequestDTO;
 import auth_api.mappers.PermissionMapper;
 import auth_api.repositories.ModuleRepository;
 import auth_api.repositories.PermissionRepository;
+import auth_api.repositories.UserRepository;
 import auth_api.services.IPermissionService;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +19,14 @@ import java.util.List;
 public class PermissionServiceImpl implements IPermissionService {
 
     private final PermissionRepository permissionRepository;
+    private final UserRepository userRepository;
     private final PermissionMapper permissionMapper;
     private final ModuleRepository moduleRepository;
 
-    public PermissionServiceImpl(PermissionRepository permissionRepository, PermissionMapper permissionMapper,
-                                 ModuleRepository moduleRepository) {
+    public PermissionServiceImpl(PermissionRepository permissionRepository, UserRepository userRepository,
+                                 PermissionMapper permissionMapper, ModuleRepository moduleRepository) {
         this.permissionRepository = permissionRepository;
+        this.userRepository = userRepository;
         this.permissionMapper = permissionMapper;
         this.moduleRepository = moduleRepository;
     }
@@ -74,5 +78,10 @@ public class PermissionServiceImpl implements IPermissionService {
             throw new NotFoundException("Permiso no encontrado con el ID: " + id);
         }
         permissionRepository.deleteById(id);
+    }
+
+    @Override
+    public List<SlugPermissionDTO> findByUserId(Long id) {
+        return permissionMapper.toBasicDTOList(permissionRepository.findByUserId(id));
     }
 }

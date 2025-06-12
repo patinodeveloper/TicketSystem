@@ -7,6 +7,7 @@ import auth_api.services.IModuleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ModuleController {
         this.moduleService = moduleService;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<ModuleDTO>>> getAllModules() {
         List<ModuleDTO> moduleDTOS = moduleService.findAll();
@@ -30,18 +32,21 @@ public class ModuleController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ModuleDTO>> getModuleById(@PathVariable Long id) {
         ModuleDTO moduleDTO = moduleService.findById(id);
         return ResponseEntity.ok(ApiResponse.success(moduleDTO));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<ModuleDTO>> createModule(@Valid @RequestBody ModuleRequestDTO moduleRequestDTO) {
         ModuleDTO created = moduleService.save(moduleRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(created));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ModuleDTO>> updateModule(
             @PathVariable Long id,
@@ -50,6 +55,7 @@ public class ModuleController {
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteModule(@PathVariable Long id) {
         moduleService.delete(id);

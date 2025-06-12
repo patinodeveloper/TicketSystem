@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,10 +29,11 @@ public class SecurityConfig {
         return http.csrf(csrf ->
                         csrf
                                 .disable())
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authRequest ->
                         authRequest
                                 .requestMatchers("/api/v1/auth/**").permitAll()
-                                .requestMatchers("/api/v1/permissions/**").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/permissions/**").hasAnyRole("ADMIN", "USER")
                                 .requestMatchers("/api/v1/roles/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/v1/modules").hasAnyRole("ADMIN", "USER")
                                 .requestMatchers("/api/v1/modules/**").hasRole("ADMIN")

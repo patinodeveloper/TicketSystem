@@ -1,7 +1,9 @@
 package auth_api.config.jwt;
 
 import auth_api.auth.service.JwtService;
-import auth_api.config.exceptions.InvalidTokenException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
         final String token = getTokenFromRequest(request);
+        final String username;
 
         if (token == null) {
             filterChain.doFilter(request, response);
@@ -37,22 +41,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            String username = jwtService.getUserNameFromToken(token);
+            username = jwtService.getUserNameFromToken(token);
+
+            // Verifica que sea un access token (no un refresh token)
+            if (!jwtService.isAccessToken(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\": \"Tipo de token invalido. Usa accessToken para peticiones API.\"}");
+                response.setContentType("application/json");
+                return;
+            }
+
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                if (!jwtService.isTokenValid(token, userDetails)) {
-                    throw new InvalidTokenException("Token inválido o expirado.");
+                if (jwtService.isTokenValid(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
+
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
-
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-        } catch (Exception ex) {
-            throw new InvalidTokenException("Error al validar el token JWT.");
+        } catch (ExpiredJwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"Token expirado\", \"code\": \"TOKEN_EXPIRED\"}");
+            response.setContentType("application/json");
+            return;
+        } catch (MalformedJwtException | SignatureException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"Token invalido\", \"code\": \"INVALID_TOKEN\"}");
+            response.setContentType("application/json");
+            return;
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"Authentication error\"}");
+            response.setContentType("application/json");
+            return;
         }
 
         filterChain.doFilter(request, response);

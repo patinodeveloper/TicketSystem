@@ -1,10 +1,10 @@
 package auth_api.services;
 
 import auth_api.entities.dto.PermissionDTO;
+import auth_api.entities.dto.permissions.SlugPermissionDTO;
 import auth_api.entities.requests.PermissionRequestDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface IPermissionService {
     List<PermissionDTO> findAll();
@@ -16,4 +16,6 @@ public interface IPermissionService {
     PermissionDTO update(Long id, PermissionRequestDTO permissionRequestDTO);
 
     void delete(Long id);
+
+    List<SlugPermissionDTO> findByUserId(Long id);
 }
