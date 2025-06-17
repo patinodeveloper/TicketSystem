@@ -2,6 +2,7 @@ package auth_api.controllers;
 
 import auth_api.entities.dto.UserDTO;
 import auth_api.entities.requests.UserRequestDTO;
+import auth_api.entities.requests.UserUpdateRequestDTO;
 import auth_api.entities.responses.ApiResponse;
 import auth_api.services.IUserService;
 import jakarta.validation.Valid;
@@ -44,7 +45,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserDTO>> update(@PathVariable Long id, @Valid @RequestBody UserRequestDTO request) {
+    public ResponseEntity<ApiResponse<UserDTO>> update(@PathVariable Long id, @Valid @RequestBody UserUpdateRequestDTO request) {
         return ResponseEntity.ok(ApiResponse.success(userService.update(id, request)));
     }
 
