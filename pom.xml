@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.patino-dev</groupId>
-    <artifactId>AuthAPI</artifactId>
+    <artifactId>TicketSystem</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>AuthAPI</name>
-    <description>API for managing permissions, roles, and users</description>
+    <name>TicketSystem</name>
+    <description>API for managing tickets</description>
     <url/>
     <licenses>
         <license/>
