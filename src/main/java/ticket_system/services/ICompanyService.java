@@ -1,6 +1,7 @@
 package ticket_system.services;
 
 import ticket_system.entities.dto.CompanyDTO;
+import ticket_system.entities.requests.company.CompanyRequestDTO;
 
 import java.util.List;
 
@@ -9,9 +10,9 @@ public interface ICompanyService {
 
     CompanyDTO findById(Long id);
 
-//    CompanyDTO save(CompanyRequestDTO companyRequestDTO);
+    CompanyDTO save(CompanyRequestDTO companyRequestDTO);
 
-//    CompanyDTO update(Long id, CompanyUpdateRequestDTO companyRequestDTO);
+    CompanyDTO update(Long id, CompanyRequestDTO companyRequestDTO);
 
     void delete(Long id);
 }

@@ -23,6 +23,9 @@ public class CompanyMapperImpl implements CompanyMapper {
                 company.getLegalName(),
                 company.getRfc(),
                 company.getGiro(),
+                company.getAddress(),
+                company.getPhone(),
+                company.getSecondPhone(),
                 company.getEmail(),
                 company.isActive()
         );
