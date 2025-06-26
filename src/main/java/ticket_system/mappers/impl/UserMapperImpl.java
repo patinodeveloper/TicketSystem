@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class UserMapperImpl implements UserMapper {
+
     @Override
     public UserDTO toDTO(User user) {
         if (user == null) return null;
@@ -29,6 +30,7 @@ public class UserMapperImpl implements UserMapper {
         User user = new User();
         user.setFirstName(requestDTO.getFirstName());
         user.setLastName(requestDTO.getLastName());
+        user.setSecondLastName(requestDTO.getSecondLastName());
         user.setEmail(requestDTO.getEmail());
         user.setPassword(requestDTO.getPassword());
         user.setRole(requestDTO.getRole());

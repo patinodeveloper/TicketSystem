@@ -1,11 +1,13 @@
 package ticket_system.services.impl;
 
 import ticket_system.config.exceptions.NotFoundException;
+import ticket_system.entities.Company;
 import ticket_system.entities.User;
 import ticket_system.entities.dto.UserDTO;
 import ticket_system.entities.requests.UserRequestDTO;
 import ticket_system.entities.requests.UserUpdateRequestDTO;
 import ticket_system.mappers.UserMapper;
+import ticket_system.repositories.CompanyRepository;
 import ticket_system.repositories.UserRepository;
 import ticket_system.services.IUserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,12 +21,14 @@ import java.util.Set;
 public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository,
+    public UserServiceImpl(UserRepository userRepository, CompanyRepository companyRepository,
                            UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.companyRepository = companyRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
     }
@@ -44,8 +48,12 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserDTO save(UserRequestDTO userRequestDTO) {
+    public UserDTO save(Long companyId, UserRequestDTO userRequestDTO) {
         User user = userMapper.toEntity(userRequestDTO);
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException("Compañía no encontrada para el id: " + companyId));
+        user.setCompany(company);
 
         if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().trim().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
@@ -53,8 +61,8 @@ public class UserServiceImpl implements IUserService {
             throw new IllegalArgumentException("La contraseña es obligatoria");
         }
 
-        User updatedUser = userRepository.save(user);
-        return userMapper.toDTO(updatedUser);
+        User savedUser = userRepository.save(user);
+        return userMapper.toDTO(savedUser);
     }
 
     @Override
@@ -64,6 +72,7 @@ public class UserServiceImpl implements IUserService {
 
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());
+        user.setSecondLastName(userRequestDTO.getSecondLastName());
         user.setEmail(userRequestDTO.getEmail());
         user.setRole(userRequestDTO.getRole());
 

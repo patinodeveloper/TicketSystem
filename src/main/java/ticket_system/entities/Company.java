@@ -5,7 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -13,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "companies")
 public class Company {
 
@@ -23,10 +28,8 @@ public class Company {
     @Column(nullable = false)
     private String name;
 
-    //    @Column(nullable = false)
-    private String socialRazon;
+    private String legalName;
 
-    //    @Column(nullable = false)
     private String rfc;
 
     @Column(nullable = false, unique = true)
@@ -45,8 +48,16 @@ public class Company {
     private String email;
 
     @Column(nullable = false)
-    private boolean isActive;
+    private boolean isActive = true;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "company", cascade = CascadeType.ALL)
     private List<User> users;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 }

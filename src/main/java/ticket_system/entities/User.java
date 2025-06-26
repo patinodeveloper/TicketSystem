@@ -31,10 +31,10 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String firstName;
 
-        @Column(nullable = false)
+    @Column(nullable = false)
     private String lastName;
 
-        @Column(nullable = false)
+    @Column(nullable = false)
     private String secondLastName;
 
     @Column(nullable = false, unique = true)
@@ -47,7 +47,7 @@ public class User implements UserDetails {
     private RoleName role;
 
     @Column(nullable = false)
-    private boolean isActive;
+    private boolean isActive = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")

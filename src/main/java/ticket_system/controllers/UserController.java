@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/ticketsystem/api/v1/users")
 public class UserController {
 
     private final IUserService userService;
@@ -37,9 +37,9 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    public ResponseEntity<ApiResponse<UserDTO>> create(@Valid @RequestBody UserRequestDTO request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(userService.save(request)));
+    @PostMapping("/{companyId}")
+    public ResponseEntity<ApiResponse<UserDTO>> create(@PathVariable Long companyId, @Valid @RequestBody UserRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(userService.save(companyId, request)));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
