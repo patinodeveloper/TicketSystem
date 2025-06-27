@@ -2,7 +2,7 @@ package ticket_system.mappers;
 
 import ticket_system.entities.Project;
 import ticket_system.entities.dto.ProjectDTO;
-import ticket_system.entities.requests.projects.ProjectRequestDTO;
+import ticket_system.entities.requests.project.ProjectRequestDTO;
 
 import java.util.List;
 

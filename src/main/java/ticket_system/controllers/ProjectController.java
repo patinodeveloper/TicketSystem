@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ticket_system.entities.dto.ProjectDTO;
-import ticket_system.entities.requests.projects.ProjectRequestDTO;
+import ticket_system.entities.requests.project.ProjectRequestDTO;
 import ticket_system.entities.responses.ApiResponse;
 import ticket_system.services.IProjectService;
 

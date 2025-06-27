@@ -5,7 +5,7 @@ import ticket_system.config.exceptions.NotFoundException;
 import ticket_system.entities.Company;
 import ticket_system.entities.Project;
 import ticket_system.entities.dto.ProjectDTO;
-import ticket_system.entities.requests.projects.ProjectRequestDTO;
+import ticket_system.entities.requests.project.ProjectRequestDTO;
 import ticket_system.mappers.ProjectMapper;
 import ticket_system.repositories.CompanyRepository;
 import ticket_system.repositories.ProjectRepository;
@@ -66,7 +66,7 @@ public class ProjectServiceImpl implements IProjectService {
         project.setCompany(company);
 
         Project updatedProject = projectRepository.save(project);
-        return new ProjectDTO(updatedProject);
+        return projectMapper.toDTO(updatedProject);
     }
 
     @Override

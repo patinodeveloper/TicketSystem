@@ -1,10 +1,9 @@
 package ticket_system.mappers.impl;
 
 import org.springframework.stereotype.Component;
-import ticket_system.entities.Company;
 import ticket_system.entities.Project;
 import ticket_system.entities.dto.ProjectDTO;
-import ticket_system.entities.requests.projects.ProjectRequestDTO;
+import ticket_system.entities.requests.project.ProjectRequestDTO;
 import ticket_system.mappers.ProjectMapper;
 
 import java.util.List;

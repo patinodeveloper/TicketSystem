@@ -1,7 +1,7 @@
 package ticket_system.services;
 
 import ticket_system.entities.dto.ProjectDTO;
-import ticket_system.entities.requests.projects.ProjectRequestDTO;
+import ticket_system.entities.requests.project.ProjectRequestDTO;
 
 import java.util.List;
 
