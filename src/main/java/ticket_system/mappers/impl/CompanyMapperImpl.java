@@ -17,18 +17,7 @@ public class CompanyMapperImpl implements CompanyMapper {
     public CompanyDTO toDTO(Company company) {
         if (company == null) return null;
 
-        return new CompanyDTO(
-                company.getId(),
-                company.getName(),
-                company.getLegalName(),
-                company.getRfc(),
-                company.getGiro(),
-                company.getAddress(),
-                company.getPhone(),
-                company.getSecondPhone(),
-                company.getEmail(),
-                company.isActive()
-        );
+        return new CompanyDTO(company);
     }
 
     @Override

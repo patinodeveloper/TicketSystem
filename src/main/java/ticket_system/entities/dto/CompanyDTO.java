@@ -1,8 +1,7 @@
 package ticket_system.entities.dto;
 
 import lombok.Getter;
-
-import java.util.List;
+import ticket_system.entities.Company;
 
 @Getter
 public class CompanyDTO {
@@ -17,17 +16,16 @@ public class CompanyDTO {
     private final String email;
     private final boolean isActive;
 
-    public CompanyDTO(Long id, String name, String legalName, String rfc, String giro, String address, String phone,
-                      String secondPhone, String email, boolean isActive) {
-        this.id = id;
-        this.name = name;
-        this.legalName = legalName;
-        this.rfc = rfc;
-        this.giro = giro;
-        this.address = address;
-        this.phone = phone;
-        this.secondPhone = secondPhone;
-        this.email = email;
-        this.isActive = isActive;
+    public CompanyDTO(Company company) {
+        this.id = company.getId();
+        this.name = company.getName();
+        this.legalName = company.getLegalName();
+        this.rfc = company.getRfc();
+        this.giro = company.getGiro();
+        this.address = company.getAddress();
+        this.phone = company.getPhone();
+        this.secondPhone = company.getSecondPhone();
+        this.email = company.getEmail();
+        this.isActive = company.isActive();
     }
 }
