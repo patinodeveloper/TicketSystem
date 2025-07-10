@@ -1,7 +1,6 @@
 package ticket_system.config.exceptions.controllers;
 
-import ticket_system.config.exceptions.InvalidTokenException;
-import ticket_system.config.exceptions.NotFoundException;
+import ticket_system.config.exceptions.*;
 import ticket_system.entities.responses.ApiResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -59,5 +58,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(ApiResponse.error("Error de validación", errors));
+    }
+
+    @ExceptionHandler(TicketClosed.class)
+    public ResponseEntity<ApiResponse<Void>> handleTicketClosed(TicketClosed ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidTicketStatusTransitionException.class)
+    public ResponseEntity<ApiResponse<String>> handleInvalidTicketStatusTransition(
+            InvalidTicketStatusTransitionException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 }

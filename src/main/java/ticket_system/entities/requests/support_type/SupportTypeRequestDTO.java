@@ -13,7 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class SupportTypeRequestDTO {
     @NotBlank(message = "El nombre es obligatorio")
-    @Size(min = 3, max = 100, message = "El nombre debe tener entre 3 y 150 caracteres")
+    @Size(min = 3, max = 150, message = "El nombre debe tener entre 3 y 150 caracteres")
     private String name;
 
     private String description;

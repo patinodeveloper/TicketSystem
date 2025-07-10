@@ -18,11 +18,11 @@ public class CompanyRequestDTO {
     private String name;
 
 //    @NotBlank(message = "La razon social es obligatoria")
-    @Size(min = 3, max = 50, message = "La razón social debe tener entre 3 y 150 caracteres")
+    @Size(min = 3, max = 150, message = "La razón social debe tener entre 3 y 150 caracteres")
     private String legalName;
 
 //    @NotBlank(message = "El rfc es obligatorio")
-    @Size(min = 3, max = 50, message = "El rfc debe tener entre 3 y 13 caracteres")
+    @Size(min = 3, max = 13, message = "El rfc debe tener entre 3 y 13 caracteres")
     private String rfc;
 
     @NotBlank(message = "El giro de la empresa es obligatorio")
