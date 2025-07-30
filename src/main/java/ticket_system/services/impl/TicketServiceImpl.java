@@ -15,6 +15,7 @@ import ticket_system.enums.TicketStatus;
 import ticket_system.mappers.TicketMapper;
 import ticket_system.repositories.*;
 import ticket_system.services.ITicketService;
+import ticket_system.services.storage.FileStorageService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,17 +26,17 @@ public class TicketServiceImpl implements ITicketService {
     private final TicketRepository ticketRepository;
     private final ProjectRepository projectRepository;
     private final SupportTypeRepository typeRepository;
-    private final UserRepository userRepository;
     private final TicketMapper ticketMapper;
+    private final ticket_system.services.storage.FileStorageService fileStorageService;
 
     public TicketServiceImpl(TicketRepository ticketRepository, ProjectRepository projectRepository,
                              SupportTypeRepository typeRepository, UserRepository userRepository,
-                             TicketMapper ticketMapper) {
+                             TicketMapper ticketMapper, FileStorageService fileStorageService) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
         this.typeRepository = typeRepository;
-        this.userRepository = userRepository;
         this.ticketMapper = ticketMapper;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
@@ -66,6 +67,15 @@ public class TicketServiceImpl implements ITicketService {
         ticket.setSupportType(supportType);
         ticket.setClient(client);
 
+        // Comprobamos que existe evidencia por parte del cliente
+        if (requestDTO.getClientEvidenceFile() != null && !requestDTO.getClientEvidenceFile().isEmpty()) {
+            String filePath = fileStorageService.storeFile(
+                    requestDTO.getClientEvidenceFile(),
+                    "tickets/client-evidence"
+            );
+            ticket.setClientEvidence(filePath);
+        }
+
         Ticket savedTicket = ticketRepository.save(ticket);
         return ticketMapper.toDTO(savedTicket);
     }
@@ -88,6 +98,21 @@ public class TicketServiceImpl implements ITicketService {
                 .orElseThrow(() ->
                         new NotFoundException("Tipo de Soporte no encontrado con el id: " + requestDTO.getSupportTypeId()));
 
+        // Comprobamos que existe evidencia por parte del cliente
+        if (requestDTO.getClientEvidenceFile() != null && !requestDTO.getClientEvidenceFile().isEmpty()) {
+            // Eliminamos el archivo anterior si existe
+            if (existingTicket.getClientEvidence() != null) {
+                fileStorageService.deleteFile(existingTicket.getClientEvidence());
+            }
+
+            // Guardamos el nuevo archivo
+            String filePath = fileStorageService.storeFile(
+                    requestDTO.getClientEvidenceFile(),
+                    "tickets/client-evidence"
+            );
+            requestDTO.setClientEvidence(filePath);
+        }
+
         ticketMapper.updateEntityFromClientDTO(existingTicket, requestDTO);
         existingTicket.setProject(project);
         existingTicket.setSupportType(supportType);
@@ -104,6 +129,18 @@ public class TicketServiceImpl implements ITicketService {
         Ticket existingTicket = ticketRepository.findById(id)
                 .orElseThrow(() ->
                         new NotFoundException("Ticket no encontrado con el id: " + id));
+
+        if (requestDTO.getSupportEvidenceFile() != null && !requestDTO.getSupportEvidenceFile().isEmpty()) {
+            if (existingTicket.getSupportEvidence() != null) {
+                fileStorageService.deleteFile(existingTicket.getSupportEvidence());
+            }
+
+            String filePath = fileStorageService.storeFile(
+                    requestDTO.getSupportEvidenceFile(),
+                    "tickets/support-evidence"
+            );
+            requestDTO.setSupportEvidence(filePath);
+        }
 
         ticketMapper.updateEntityFromSupportDTO(existingTicket, requestDTO);
         existingTicket.setStatus(TicketStatus.CLOSED);
@@ -146,6 +183,19 @@ public class TicketServiceImpl implements ITicketService {
         if (!ticketRepository.existsById(id)) {
             throw new NotFoundException("Ticket no encontrado con el ID: " + id);
         }
+
+        // Se obtiene el ticket para eliminar archivos asociados
+        Ticket ticket = ticketRepository.findById(id).orElse(null);
+        if (ticket != null) {
+            // Eliminar archivos de evidencia si existen
+            if (ticket.getClientEvidence() != null) {
+                fileStorageService.deleteFile(ticket.getClientEvidence());
+            }
+            if (ticket.getSupportEvidence() != null) {
+                fileStorageService.deleteFile(ticket.getSupportEvidence());
+            }
+        }
+
         ticketRepository.deleteById(id);
     }
 }

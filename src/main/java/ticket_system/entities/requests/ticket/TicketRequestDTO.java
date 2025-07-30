@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -20,7 +21,11 @@ public class TicketRequestDTO {
     @NotBlank(message = "La descripcion es obligatoria")
     private String description;
 
+    // Campo para la ruta del archivo (se guarda en BD)
     private String clientEvidence;
+
+    // Campo para el archivo que se sube (se guarda en el proyecto por ahora)
+    private MultipartFile clientEvidenceFile;
 
     @NotNull(message = "El ID del Proyecto es obligatorio")
     private Long projectId;
