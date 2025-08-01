@@ -142,23 +142,6 @@ public class FileStorageService {
         return "application/octet-stream";
     }
 
-    /**
-     * Verifica si un archivo de evidencia existe
-     *
-     * @param filename Nombre del archivo
-     * @return true si existe, false si no
-     */
-    public boolean evidenceExists(String filename) {
-        String[] possiblePaths = {
-                "tickets/client-evidence/" + filename,
-                "tickets/support-evidence/" + filename
-        };
-
-        return java.util.Arrays.stream(possiblePaths)
-                .map(this::getFilePath)
-                .anyMatch(Files::exists);
-    }
-
     public boolean isValidFileType(MultipartFile file) {
         String contentType = file.getContentType();
         return contentType != null && (

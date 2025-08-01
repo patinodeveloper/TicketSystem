@@ -8,6 +8,7 @@ import ticket_system.config.exceptions.TicketClosed;
 import ticket_system.entities.*;
 import ticket_system.entities.dto.TicketDTO;
 import ticket_system.entities.requests.ticket.TicketClientUpdateRequestDTO;
+import ticket_system.entities.requests.ticket.TicketPauseRequestDTO;
 import ticket_system.entities.requests.ticket.TicketRequestDTO;
 import ticket_system.entities.requests.ticket.TicketSupportUpdateRequestDTO;
 import ticket_system.enums.RoleName;
@@ -15,9 +16,12 @@ import ticket_system.enums.TicketStatus;
 import ticket_system.mappers.TicketMapper;
 import ticket_system.repositories.*;
 import ticket_system.services.ITicketService;
+import ticket_system.services.ITicketStatusHistoryService;
 import ticket_system.services.storage.FileStorageService;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -27,16 +31,19 @@ public class TicketServiceImpl implements ITicketService {
     private final ProjectRepository projectRepository;
     private final SupportTypeRepository typeRepository;
     private final TicketMapper ticketMapper;
-    private final ticket_system.services.storage.FileStorageService fileStorageService;
+    private final FileStorageService fileStorageService;
+    private final ITicketStatusHistoryService historyService;
 
     public TicketServiceImpl(TicketRepository ticketRepository, ProjectRepository projectRepository,
                              SupportTypeRepository typeRepository, UserRepository userRepository,
-                             TicketMapper ticketMapper, FileStorageService fileStorageService) {
+                             TicketMapper ticketMapper, FileStorageService fileStorageService,
+                             ITicketStatusHistoryService historyService) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
         this.typeRepository = typeRepository;
         this.ticketMapper = ticketMapper;
         this.fileStorageService = fileStorageService;
+        this.historyService = historyService;
     }
 
     @Override
@@ -130,6 +137,21 @@ public class TicketServiceImpl implements ITicketService {
                 .orElseThrow(() ->
                         new NotFoundException("Ticket no encontrado con el id: " + id));
 
+        if (existingTicket.getStatus() == TicketStatus.IN_PROGRESS &&
+                existingTicket.getCurrentProgressStart() != null) {
+
+            long currentSessionMinutes = Duration.between(
+                    existingTicket.getCurrentProgressStart(),
+                    LocalDateTime.now()
+            ).toMinutes();
+
+            long newTotal = (existingTicket.getTotalProgressMinutes() != null ?
+                    existingTicket.getTotalProgressMinutes() : 0L) + currentSessionMinutes;
+
+            existingTicket.setTotalProgressMinutes(newTotal);
+            existingTicket.setCurrentProgressStart(null);
+        }
+
         if (requestDTO.getSupportEvidenceFile() != null && !requestDTO.getSupportEvidenceFile().isEmpty()) {
             if (existingTicket.getSupportEvidence() != null) {
                 fileStorageService.deleteFile(existingTicket.getSupportEvidence());
@@ -142,13 +164,19 @@ public class TicketServiceImpl implements ITicketService {
             requestDTO.setSupportEvidence(filePath);
         }
 
+        TicketStatus previousStatus = existingTicket.getStatus();
+
         ticketMapper.updateEntityFromSupportDTO(existingTicket, requestDTO);
         existingTicket.setStatus(TicketStatus.CLOSED);
         existingTicket.setEndDate(LocalDate.now());
         existingTicket.setSupport(user);
 
         Ticket resolvedTicket = ticketRepository.save(existingTicket);
-        return ticketMapper.toDTO(resolvedTicket);
+
+        historyService.recordStatusChange(resolvedTicket, previousStatus, TicketStatus.CLOSED,
+                user, requestDTO.getResolution(), null);
+
+        return new TicketDTO(resolvedTicket);
     }
 
     @Override
@@ -166,8 +194,9 @@ public class TicketServiceImpl implements ITicketService {
             throw new InvalidTicketStatusTransitionException("Solo se pueden cambiar a IN_PROGRESS los tickets con estado OPEN");
         }
 
-        // Cambiar el status a IN_PROGRESS
+        TicketStatus previousStatus = existingTicket.getStatus();
         existingTicket.setStatus(TicketStatus.IN_PROGRESS);
+        existingTicket.setCurrentProgressStart(LocalDateTime.now());
 
         // Asignamos el ticket al usuario SUPPORT que lo está tomando
         if (existingTicket.getSupport() == null) {
@@ -175,8 +204,83 @@ public class TicketServiceImpl implements ITicketService {
         }
 
         Ticket updatedTicket = ticketRepository.save(existingTicket);
-        return ticketMapper.toDTO(updatedTicket);
+
+        // Registra el cambio de estado
+        historyService.recordStatusChange(updatedTicket, previousStatus, TicketStatus.IN_PROGRESS,
+                user, "Ticket tomado por soporte", null);
+
+        return new TicketDTO(updatedTicket);
     }
+
+    @Override
+    public TicketDTO pauseTicket(Long id, TicketPauseRequestDTO pauseRequest, User user) {
+        if (user.getRole() != RoleName.SUPPORT && user.getRole() != RoleName.ADMIN) {
+            throw new ForbiddenException("No tienes permiso para pausar tickets");
+        }
+
+        Ticket existingTicket = ticketRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Ticket no encontrado con el id: " + id));
+
+        if (existingTicket.getStatus() != TicketStatus.IN_PROGRESS) {
+            throw new InvalidTicketStatusTransitionException("Solo se pueden pausar tickets que estén EN PROGRESO");
+        }
+
+        // Calcula y acumula el tiempo de la sesión actual
+        if (existingTicket.getCurrentProgressStart() != null) {
+            long currentSessionMinutes = Duration.between(
+                    existingTicket.getCurrentProgressStart(),
+                    LocalDateTime.now()
+            ).toMinutes();
+
+            long newTotal = (existingTicket.getTotalProgressMinutes() != null ?
+                    existingTicket.getTotalProgressMinutes() : 0L) + currentSessionMinutes;
+
+            existingTicket.setTotalProgressMinutes(newTotal);
+            existingTicket.setCurrentProgressStart(null);
+        }
+
+        TicketStatus previousStatus = existingTicket.getStatus();
+        existingTicket.setStatus(TicketStatus.PAUSED);
+
+        Ticket updatedTicket = ticketRepository.save(existingTicket);
+
+        // Registra la pausa por alguna razón
+        historyService.recordStatusChange(updatedTicket, previousStatus, TicketStatus.PAUSED,
+                user, "Ticket pausado", pauseRequest.getPauseReason());
+
+        return new TicketDTO(updatedTicket);
+    }
+
+    @Override
+    public TicketDTO resumeTicket(Long id, User user) {
+        if (user.getRole() != RoleName.SUPPORT && user.getRole() != RoleName.ADMIN) {
+            throw new ForbiddenException("No tienes permiso para reanudar tickets");
+        }
+
+        Ticket existingTicket = ticketRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Ticket no encontrado con el id: " + id));
+
+        if (existingTicket.getStatus() != TicketStatus.PAUSED) {
+            throw new InvalidTicketStatusTransitionException("Solo se pueden reanudar tickets que estén PAUSADOS");
+        }
+
+        TicketStatus previousStatus = existingTicket.getStatus();
+        existingTicket.setStatus(TicketStatus.IN_PROGRESS);
+        existingTicket.setCurrentProgressStart(LocalDateTime.now());
+
+        if (existingTicket.getSupport() == null) {
+            existingTicket.setSupport(user);
+        }
+
+        Ticket updatedTicket = ticketRepository.save(existingTicket);
+
+        // Registrar reanudacion
+        historyService.recordStatusChange(updatedTicket, previousStatus, TicketStatus.IN_PROGRESS,
+                user, "Ticket reanudado", null);
+
+        return new TicketDTO(updatedTicket);
+    }
+
 
     @Override
     public void delete(Long id) {

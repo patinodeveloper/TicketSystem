@@ -3,6 +3,7 @@ package ticket_system.services;
 import ticket_system.entities.User;
 import ticket_system.entities.dto.TicketDTO;
 import ticket_system.entities.requests.ticket.TicketClientUpdateRequestDTO;
+import ticket_system.entities.requests.ticket.TicketPauseRequestDTO;
 import ticket_system.entities.requests.ticket.TicketRequestDTO;
 import ticket_system.entities.requests.ticket.TicketSupportUpdateRequestDTO;
 
@@ -20,6 +21,10 @@ public interface ITicketService {
     TicketDTO resolveTicket(Long id, TicketSupportUpdateRequestDTO requestDTO, User user);
 
     TicketDTO updateTicketStatus(Long id, User user);
+
+    TicketDTO pauseTicket(Long id, TicketPauseRequestDTO pauseRequest, User user);
+
+    TicketDTO resumeTicket(Long id, User user);
 
     void delete(Long id);
 }

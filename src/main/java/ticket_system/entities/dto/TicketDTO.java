@@ -4,6 +4,7 @@ import lombok.Getter;
 import ticket_system.entities.Ticket;
 import ticket_system.enums.TicketStatus;
 
+import java.time.Duration;
 import java.time.LocalDate;
 
 @Getter
@@ -21,6 +22,8 @@ public class TicketDTO {
     private final UserDTO support;
     private final LocalDate startDate;
     private final LocalDate endDate;
+    private final Long totalProgressMinutes;
+    private final String formattedProgressTime;
 
     public TicketDTO(Ticket ticket) {
         this.id = ticket.getId();
@@ -36,5 +39,14 @@ public class TicketDTO {
         this.support = ticket.getSupport() != null ? new UserDTO(ticket.getSupport()) : null;
         this.startDate = ticket.getStartDate();
         this.endDate = ticket.getEndDate();
+        this.totalProgressMinutes = ticket.getCurrentTotalProgressMinutes();
+        this.formattedProgressTime = formatDuration(Duration.ofMinutes(this.totalProgressMinutes));
+
+    }
+
+    private String formatDuration(Duration duration) {
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes() % 60;
+        return String.format("%d horas, %d minutos", hours, minutes);
     }
 }

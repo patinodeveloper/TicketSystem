@@ -11,26 +11,36 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ticket_system.entities.User;
 import ticket_system.entities.dto.TicketDTO;
+import ticket_system.entities.dto.TicketStatusHistoryDTO;
 import ticket_system.entities.requests.ticket.TicketClientUpdateRequestDTO;
+import ticket_system.entities.requests.ticket.TicketPauseRequestDTO;
 import ticket_system.entities.requests.ticket.TicketRequestDTO;
 import ticket_system.entities.requests.ticket.TicketSupportUpdateRequestDTO;
 import ticket_system.entities.responses.ApiResponse;
 import ticket_system.services.ITicketService;
+import ticket_system.services.ITicketStatusHistoryService;
 import ticket_system.services.storage.FileStorageService;
+import ticket_system.validators.FileValidator;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/ticketsystem/api/v1/tickets")
 public class TicketController {
     private final ITicketService ticketService;
     private final FileStorageService fileStorageService;
+    private final ITicketStatusHistoryService historyService;
+    private final FileValidator fileValidator;
 
-    public TicketController(ITicketService ticketService, FileStorageService fileStorageService) {
+    public TicketController(ITicketService ticketService, FileStorageService fileStorageService,
+                            ITicketStatusHistoryService historyService, FileValidator fileValidator) {
         this.ticketService = ticketService;
         this.fileStorageService = fileStorageService;
+        this.historyService = historyService;
+        this.fileValidator = fileValidator;
     }
 
     @GetMapping
@@ -51,7 +61,8 @@ public class TicketController {
 
         // Valida que el archivo si existe
         if (requestDTO.getClientEvidenceFile() != null && !requestDTO.getClientEvidenceFile().isEmpty()) {
-            ResponseEntity<ApiResponse<TicketDTO>> fileValidationError = validateFile(requestDTO.getClientEvidenceFile());
+            ResponseEntity<ApiResponse<TicketDTO>> fileValidationError =
+                    fileValidator.validateFileForTicket(requestDTO.getClientEvidenceFile());
             if (fileValidationError != null) {
                 return fileValidationError;
             }
@@ -68,7 +79,8 @@ public class TicketController {
             @AuthenticationPrincipal User user) {
 
         if (requestDTO.getClientEvidenceFile() != null && !requestDTO.getClientEvidenceFile().isEmpty()) {
-            ResponseEntity<ApiResponse<TicketDTO>> fileValidationError = validateFile(requestDTO.getClientEvidenceFile());
+            ResponseEntity<ApiResponse<TicketDTO>> fileValidationError =
+                    fileValidator.validateFileForTicket(requestDTO.getClientEvidenceFile());
             if (fileValidationError != null) {
                 return fileValidationError;
             }
@@ -84,7 +96,8 @@ public class TicketController {
             @AuthenticationPrincipal User user) {
 
         if (requestDTO.getSupportEvidenceFile() != null && !requestDTO.getSupportEvidenceFile().isEmpty()) {
-            ResponseEntity<ApiResponse<TicketDTO>> fileValidationError = validateFile(requestDTO.getSupportEvidenceFile());
+            ResponseEntity<ApiResponse<TicketDTO>> fileValidationError =
+                    fileValidator.validateFileForTicket(requestDTO.getSupportEvidenceFile());
             if (fileValidationError != null) {
                 return fileValidationError;
             }
@@ -93,16 +106,29 @@ public class TicketController {
         return ResponseEntity.ok(ApiResponse.success(ticketService.resolveTicket(id, requestDTO, user)));
     }
 
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{id}/init")
     public ResponseEntity<ApiResponse<TicketDTO>> updateStatus(@PathVariable Long id,
                                                                @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(ApiResponse.success(ticketService.updateTicketStatus(id, user)));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        ticketService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success("Ticket eliminado exitosamente", null));
+    @PatchMapping("/{id}/pause")
+    public ResponseEntity<ApiResponse<TicketDTO>> pauseTicket(
+            @PathVariable Long id,
+            @Valid @RequestBody TicketPauseRequestDTO pauseRequest,
+            @AuthenticationPrincipal User user) {
+
+        TicketDTO ticketDTO = ticketService.pauseTicket(id, pauseRequest, user);
+        return ResponseEntity.ok(ApiResponse.success(ticketDTO));
+    }
+
+    @PatchMapping("/{id}/resume")
+    public ResponseEntity<ApiResponse<TicketDTO>> resumeTicket(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+
+        TicketDTO ticketDTO = ticketService.resumeTicket(id, user);
+        return ResponseEntity.ok(ApiResponse.success(ticketDTO));
     }
 
     @GetMapping("/evidence/{filename}")
@@ -127,39 +153,21 @@ public class TicketController {
         }
     }
 
-    /**
-     * Metodo para encontrar el archivo en los posibles subdirectorios
-     *
-     * @param filename Nombre del archivo
-     * @return ruta
-     */
-    private Path findEvidenceFile(String filename) {
-        // Ubicaciones donde puede estar el archivo
-        String[] possiblePaths = {
-                "tickets/client-evidence/" + filename,
-                "tickets/support-evidence/" + filename,
-        };
-
-        for (String possiblePath : possiblePaths) {
-            Path filePath = fileStorageService.getFilePath(possiblePath);
-
-            if (Files.exists(filePath)) {
-                return filePath;
-            }
-        }
-
-        return null;
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+        ticketService.delete(id);
+        return ResponseEntity.ok(ApiResponse.success("Ticket eliminado exitosamente", null));
     }
 
-    private ResponseEntity<ApiResponse<TicketDTO>> validateFile(MultipartFile file) {
-        if (!fileStorageService.isValidFileType(file)) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Tipo de archivo no permitido"));
-        }
-        if (!fileStorageService.isValidFileSize(file)) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("El archivo excede el tamaño máximo permitido (10MB)"));
-        }
-        return null;
+    @GetMapping("/{id}/history")
+    public ResponseEntity<ApiResponse<List<TicketStatusHistoryDTO>>> getTicketHistory(
+            @PathVariable Long id) {
+
+        List<TicketStatusHistoryDTO> history = historyService.getTicketHistory(id)
+                .stream()
+                .map(TicketStatusHistoryDTO::new)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(history));
     }
 }
