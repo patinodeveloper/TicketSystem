@@ -48,11 +48,12 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserDTO save(Long companyId, UserRequestDTO userRequestDTO) {
+    public UserDTO save(UserRequestDTO userRequestDTO) {
         User user = userMapper.toEntity(userRequestDTO);
 
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new IllegalArgumentException("Compañía no encontrada para el id: " + companyId));
+        Company company = companyRepository.findById(userRequestDTO.getCompanyId())
+                .orElseThrow(() ->
+                        new NotFoundException("Empresa no encontrada para el id: " + userRequestDTO.getCompanyId()));
         user.setCompany(company);
 
         if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().trim().isEmpty()) {
@@ -69,6 +70,11 @@ public class UserServiceImpl implements IUserService {
     public UserDTO update(Long id, UserUpdateRequestDTO userRequestDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        Company company = companyRepository.findById(userRequestDTO.getCompanyId())
+                .orElseThrow(() ->
+                        new NotFoundException("Empresa no encontrada para el id: " + userRequestDTO.getCompanyId()));
+        user.setCompany(company);
 
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());

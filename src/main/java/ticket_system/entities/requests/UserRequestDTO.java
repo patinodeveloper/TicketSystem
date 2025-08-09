@@ -33,10 +33,13 @@ public class UserRequestDTO {
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 4, message = "La contraseña debe tener al menos 4 caracteres")
-//    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$",
-//            message = "La contraseña debe contener al menos un número, una mayúscula, una minúscula y un carácter especial")
+    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$",
+            message = "La contraseña debe tener al menos 6 caracteres, una letra mayúscula, una letra minúscula y un número")
     private String password;
 
     private RoleName role;
+
+    @NotNull(message = "El ID de la empresa es obligatorio")
+    private Long companyId;
 }

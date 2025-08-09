@@ -12,6 +12,7 @@ public class UserDTO {
     private final String secondLastName;
     private final String email;
     private final RoleName role;
+    private final CompanyBasicDTO company;
     private final boolean isActive;
 
     public UserDTO(User user) {
@@ -21,6 +22,10 @@ public class UserDTO {
         this.secondLastName = user.getSecondLastName();
         this.email = user.getEmail();
         this.role = user.getRole();
+        this.company = user.getCompany() != null ? new CompanyBasicDTO(user.getCompany().getId(), user.getCompany().getName()) : null;
         this.isActive = user.isActive();
+    }
+
+    public record CompanyBasicDTO(Long id, String name) {
     }
 }

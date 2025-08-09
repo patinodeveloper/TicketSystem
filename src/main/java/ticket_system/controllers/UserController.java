@@ -37,9 +37,9 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/{companyId}")
-    public ResponseEntity<ApiResponse<UserDTO>> create(@PathVariable Long companyId, @Valid @RequestBody UserRequestDTO request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(userService.save(companyId, request)));
+    @PostMapping
+    public ResponseEntity<ApiResponse<UserDTO>> save(@Valid @RequestBody UserRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(userService.save(request)));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

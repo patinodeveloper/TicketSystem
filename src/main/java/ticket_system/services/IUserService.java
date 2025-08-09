@@ -11,7 +11,7 @@ public interface IUserService {
 
     UserDTO findById(Long id);
 
-    UserDTO save(Long companyId, UserRequestDTO userRequestDTO);
+    UserDTO save(UserRequestDTO userRequestDTO);
 
     UserDTO update(Long id, UserUpdateRequestDTO userRequestDTO);
 
